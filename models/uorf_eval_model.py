@@ -13,7 +13,7 @@ from sklearn.metrics import adjusted_rand_score
 import lpips
 from piq import ssim as compute_ssim
 from piq import psnr as compute_psnr
-
+import math
 
 class uorfEvalModel(BaseModel):
 
@@ -78,7 +78,7 @@ class uorfEvalModel(BaseModel):
         self.netEncoder = networks.init_net(Encoder(3, z_dim=z_dim, bottom=opt.bottom),
                                             gpu_ids=self.gpu_ids, init_type='normal')
         self.netSlotAttention = networks.init_net(
-            SlotAttention(num_slots=opt.num_slots, in_dim=z_dim, slot_dim=z_dim, iters=opt.attn_iter), gpu_ids=self.gpu_ids, init_type='normal')
+            SlotAttention(num_slots=opt.num_slots, in_dim=z_dim, slot_dim=z_dim, iters=opt.attn_iter, init_method=opt.init_method), gpu_ids=self.gpu_ids, init_type='normal')
         self.netDecoder = networks.init_net(Decoder(n_freq=opt.n_freq, input_dim=6*opt.n_freq+3+z_dim, z_dim=opt.z_dim, n_layers=opt.n_layer, locality=False,
                                                     locality_ratio=opt.obj_scale/opt.nss_scale, fixed_locality=opt.fixed_locality), gpu_ids=self.gpu_ids, init_type='xavier')
         self.L2_loss = torch.nn.MSELoss()
@@ -123,7 +123,7 @@ class uorfEvalModel(BaseModel):
         feat = feature_map.flatten(start_dim=2).permute([0, 2, 1])  # BxNxC
 
         # Slot Attention
-        z_slots, attn = self.netSlotAttention(feat)  # 1xKxC, 1xKxN
+        z_slots, attn = self.netSlotAttention(feat, s=0)  # 1xKxC, 1xKxN
         z_slots, attn = z_slots.squeeze(0), attn.squeeze(0)  # KxC, KxN
         K = attn.shape[0]
 

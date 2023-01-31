@@ -97,7 +97,7 @@ class uorfGanModel(BaseModel):
         self.netEncoder = networks.init_net(Encoder(3, z_dim=z_dim, bottom=opt.bottom),
                                             gpu_ids=self.gpu_ids, init_type='normal')
         self.netSlotAttention = networks.init_net(
-            SlotAttention(num_slots=opt.num_slots, in_dim=z_dim, slot_dim=z_dim, iters=opt.attn_iter), gpu_ids=self.gpu_ids, init_type='normal')
+            SlotAttention(num_slots=opt.num_slots, in_dim=z_dim, slot_dim=z_dim, iters=opt.attn_iter, init_method=opt.init_method), gpu_ids=self.gpu_ids, init_type='normal')
         self.netDecoder = networks.init_net(Decoder(n_freq=opt.n_freq, input_dim=6*opt.n_freq+3+z_dim, z_dim=opt.z_dim, n_layers=opt.n_layer,
                                                     locality_ratio=opt.obj_scale/opt.nss_scale, fixed_locality=opt.fixed_locality), gpu_ids=self.gpu_ids, init_type='xavier')
         self.netDisc = networks.init_net(Discriminator(size=opt.supervision_size, ndf=opt.ndf), gpu_ids=self.gpu_ids, init_type=None)
@@ -134,7 +134,7 @@ class uorfGanModel(BaseModel):
         if not self.opt.fixed_locality:
             self.cam2world_azi = input['azi_rot'].to(self.device)
 
-    def forward(self, epoch=0):
+    def forward(self, epoch=0, step=0):
         """Run forward pass. This will be called by both functions <optimize_parameters> and <test>."""
         self.weight_percept = self.opt.weight_percept if epoch >= self.opt.percept_in else 0
         self.weight_gan = self.opt.weight_gan if epoch >= self.opt.gan_train_epoch + self.opt.gan_in else 0
@@ -313,9 +313,9 @@ class uorfGanModel(BaseModel):
         self.loss_d_real = d_loss_real
         self.loss_d_fake = d_loss_fake
 
-    def optimize_parameters(self, ret_grad=False, epoch=0):
+    def optimize_parameters(self, ret_grad=False, epoch=0, step=0):
         """Update network weights; it will be called in every training iteration."""
-        self.forward(epoch)
+        self.forward(epoch, step)
         for opm in self.optimizers:
             opm.zero_grad()
         self.backward()

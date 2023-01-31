@@ -10,7 +10,7 @@ import time
 from .projection import Projection
 from torchvision.transforms import Normalize
 from .model import Encoder, Decoder, SlotAttention, get_perceptual_net, raw2outputs
-
+import math
 
 class uorfNoGanModel(BaseModel):
 
@@ -90,7 +90,7 @@ class uorfNoGanModel(BaseModel):
         self.netEncoder = networks.init_net(Encoder(3, z_dim=z_dim, bottom=opt.bottom),
                                             gpu_ids=self.gpu_ids, init_type='normal')
         self.netSlotAttention = networks.init_net(
-            SlotAttention(num_slots=opt.num_slots, in_dim=z_dim, slot_dim=z_dim, iters=opt.attn_iter), gpu_ids=self.gpu_ids, init_type='normal')
+            SlotAttention(num_slots=opt.num_slots, in_dim=z_dim, slot_dim=z_dim, iters=opt.attn_iter, init_method=opt.init_method), gpu_ids=self.gpu_ids, init_type='normal')
         self.netDecoder = networks.init_net(Decoder(n_freq=opt.n_freq, input_dim=6*opt.n_freq+3+z_dim, z_dim=opt.z_dim, n_layers=opt.n_layer,
                                                     locality_ratio=opt.obj_scale/opt.nss_scale, fixed_locality=opt.fixed_locality), gpu_ids=self.gpu_ids, init_type='xavier')
 
@@ -125,7 +125,7 @@ class uorfNoGanModel(BaseModel):
         if not self.opt.fixed_locality:
             self.cam2world_azi = input['azi_rot'].to(self.device)
 
-    def forward(self, epoch=0):
+    def forward(self, epoch=0, step=0):
         """Run forward pass. This will be called by both functions <optimize_parameters> and <test>."""
         self.weight_percept = self.opt.weight_percept if epoch >= self.opt.percept_in else 0
         dens_noise = self.opt.dens_noise if (epoch <= self.opt.percept_in and self.opt.fixed_locality) else 0
@@ -139,7 +139,8 @@ class uorfNoGanModel(BaseModel):
         feat = feature_map.flatten(start_dim=2).permute([0, 2, 1])  # BxNxC
 
         # Slot Attention
-        z_slots, attn = self.netSlotAttention(feat)  # 1xKxC, 1xKxN
+        s = self.cosine_anneal(step, 50000, 0, 1, 0)
+        z_slots, attn = self.netSlotAttention(feat, s=s)  # 1xKxC, 1xKxN
         z_slots, attn = z_slots.squeeze(0), attn.squeeze(0)  # KxC, KxN
         K = attn.shape[0]
 
@@ -226,9 +227,9 @@ class uorfNoGanModel(BaseModel):
         loss.backward()
         self.loss_perc = self.loss_perc / self.weight_percept if self.weight_percept > 0 else self.loss_perc
 
-    def optimize_parameters(self, ret_grad=False, epoch=0):
+    def optimize_parameters(self, ret_grad=False, epoch=0, step=0):
         """Update network weights; it will be called in every training iteration."""
-        self.forward(epoch)
+        self.forward(epoch, step)
         for opm in self.optimizers:
             opm.zero_grad()
         self.backward()
@@ -284,6 +285,21 @@ class uorfNoGanModel(BaseModel):
                 state_dict = torch.load(load_path, map_location=str(self.device))
                 sch.load_state_dict(state_dict)
 
+    def cosine_anneal(self, step, final_step, start_step=0, start_value=1.0, final_value=0.1):
+    
+        assert start_value >= final_value
+        assert start_step <= final_step
+        
+        if step < start_step:
+            value = start_value
+        elif step >= final_step:
+            value = final_value
+        else:
+            a = 0.5 * (start_value - final_value)
+            b = 0.5 * (start_value + final_value)
+            progress = (step - start_step) / (final_step - start_step)
+            value = a * math.cos(math.pi * progress) + b
+        return value
 
 if __name__ == '__main__':
     pass

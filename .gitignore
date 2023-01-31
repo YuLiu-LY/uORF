@@ -1,1 +1,7 @@
 .idea
+*.png
+*.txt
+*.out
+index.html
+*.pyc
+*.pth
