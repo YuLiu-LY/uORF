@@ -4,10 +4,12 @@ from data import create_dataset
 from models import create_model
 from util.visualizer import Visualizer
 from util.util import AverageMeter, set_seed
+import wandb
 
 
 if __name__ == '__main__':
     opt = TrainOptions().parse()   # get training options
+    wandb.init(project="uorf", name=opt.name, config=opt)
     dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
     dataset_size = len(dataset)    # get the number of images in the dataset.
     print('The number of training images = %d' % dataset_size)
@@ -19,6 +21,7 @@ if __name__ == '__main__':
 
     # Set random seed for this experiment
     set_seed(opt.seed)
+    out_log = {}
 
     for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):    # outer loop for different epochs; we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>
         epoch_start_time = time.time()  # timer for entire epoch
@@ -76,6 +79,12 @@ if __name__ == '__main__':
                     visualizer.plot_current_losses(epoch, float(epoch_iter) / dataset_size, losses)
                 print('learning rate:', model.optimizers[0].param_groups[0]['lr'])
 
+                out_log['epoch'] = epoch
+                for k, v in losses.items():
+                    out_log[k] = v
+                out_log['LR'] = model.optimizers[0].param_groups[0]['lr']
+                wandb.log(out_log)
+                
             if total_iters % opt.save_latest_freq == 0:   # cache our latest model every <save_latest_freq> iterations
                 print('saving the latest model (epoch %d, total_iters %d)' % (epoch, total_iters))
                 save_suffix = 'iter_%d' % total_iters if opt.save_by_iter else 'latest'

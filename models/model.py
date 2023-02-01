@@ -226,8 +226,8 @@ class SlotAttention(nn.Module):
             slot_bg = mu_bg + sigma_bg * torch.randn_like(mu_bg)
         elif self.init_method == 'embedding':
             mu = self.slots_init.weight.expand(B, -1, -1)
+            # slots_init = mu
             z = torch.randn_like(mu).type_as(mu)
-            print(f's={s}')
             slots_init = mu + z * s * mu.detach()
             slot_bg = slots_init[:, 0:1, :]
             slot_fg = slots_init[:, 1:, :]
@@ -237,7 +237,10 @@ class SlotAttention(nn.Module):
         v = self.to_v(feat)
 
         attn = None
-        for _ in range(self.iters):
+        for i in range(self.iters):
+            if i == self.iters - 1:
+                slot_bg = (slot_bg - slots_init[:, 0:1, :]).detach() + slots_init[:, 0:1, :]
+                slot_fg = (slot_fg - slots_init[:, 1:, :]).detach() + slots_init[:, 1:, :]
             slot_prev_bg = slot_bg
             slot_prev_fg = slot_fg
             q_fg = self.to_q(slot_fg)
