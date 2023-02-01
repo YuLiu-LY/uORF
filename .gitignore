@@ -5,3 +5,8 @@
 index.html
 *.pyc
 *.pth
+latest-run
+*.log
+*.wandb
+*.json
+*.yaml
