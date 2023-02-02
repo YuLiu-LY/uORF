@@ -10,7 +10,7 @@ import time
 from .projection import Projection
 from torchvision.transforms import Normalize
 from .model import Encoder, Decoder, SlotAttention, Discriminator, get_perceptual_net, raw2outputs, toggle_grad, d_logistic_loss, d_r1_loss, g_nonsaturating_loss
-
+import math
 
 class uorfGanModel(BaseModel):
 
@@ -149,7 +149,9 @@ class uorfGanModel(BaseModel):
         feat = feature_map.flatten(start_dim=2).permute([0, 2, 1])  # BxNxC
 
         # Slot Attention
-        z_slots, attn = self.netSlotAttention(feat)  # 1xKxC, 1xKxN
+        s = self.cosine_anneal(step, 30000, 0, 1, 0)
+        # s = 0
+        z_slots, attn = self.netSlotAttention(feat, s=s)  # 1xKxC, 1xKxN
         z_slots, attn = z_slots.squeeze(0), attn.squeeze(0)  # KxC, KxN
         K = attn.shape[0]
 
@@ -240,7 +242,7 @@ class uorfGanModel(BaseModel):
         self.loss_perc = self.loss_perc / self.weight_percept if self.weight_percept > 0 else self.loss_perc
         self.loss_gan = self.loss_gan / self.weight_gan if self.weight_gan > 0 else self.loss_gan
 
-    def forward_disc(self, it=0):
+    def forward_disc(self, it=0, step=0):
         dev = self.x[0:1].device
         nss2cam0 = self.cam2world[0:1].inverse() if self.opt.fixed_locality else self.cam2world_azi[0:1].inverse()
 
@@ -249,7 +251,9 @@ class uorfGanModel(BaseModel):
         feat = feature_map.flatten(start_dim=2).permute([0, 2, 1])  # BxNxC
 
         # Slot Attention
-        z_slots, attn = self.netSlotAttention(feat)  # 1xKxC, 1xKxN
+        s = self.cosine_anneal(step, 30000, 0, 1, 0)
+        # s = 0
+        z_slots, attn = self.netSlotAttention(feat, s=s)  # 1xKxC, 1xKxN
         z_slots, attn = z_slots.squeeze(0), attn.squeeze(0)  # KxC, KxN
         K = attn.shape[0]
 
@@ -371,6 +375,21 @@ class uorfGanModel(BaseModel):
                 state_dict = torch.load(load_path, map_location=str(self.device))
                 sch.load_state_dict(state_dict)
 
+    def cosine_anneal(self, step, final_step, start_step=0, start_value=1.0, final_value=0.1):
+    
+        assert start_value >= final_value
+        assert start_step <= final_step
+        
+        if step < start_step:
+            value = start_value
+        elif step >= final_step:
+            value = final_value
+        else:
+            a = 0.5 * (start_value - final_value)
+            b = 0.5 * (start_value + final_value)
+            progress = (step - start_step) / (final_step - start_step)
+            value = a * math.cos(math.pi * progress) + b
+        return value
 
 if __name__ == '__main__':
     pass
