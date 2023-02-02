@@ -139,8 +139,8 @@ class uorfNoGanModel(BaseModel):
         feat = feature_map.flatten(start_dim=2).permute([0, 2, 1])  # BxNxC
 
         # Slot Attention
-        s = self.cosine_anneal(step, 30000, 0, 1, 0)
-        # s = 0
+        # s = self.cosine_anneal(step, 30000, 0, 1, 0)
+        s = 0
         z_slots, attn = self.netSlotAttention(feat, s=s)  # 1xKxC, 1xKxN
         z_slots, attn = z_slots.squeeze(0), attn.squeeze(0)  # KxC, KxN
         K = attn.shape[0]
