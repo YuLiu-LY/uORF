@@ -86,6 +86,7 @@ class BaseModel(ABC):
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
+        self.sigma_step = opt.sigma_step
 
     def eval(self):
         """Make models eval mode during test time"""
@@ -187,18 +188,14 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
-                try:
-                    print('loading the model from %s' % load_path)
-                    # if you are using PyTorch newer than 0.4 (e.g., built from
-                    # GitHub source), you can remove str() on self.device
-                    state_dict = torch.load(load_path, map_location=self.device)
-                    if hasattr(state_dict, '_metadata'):
-                        del state_dict._metadata
-                    net.load_state_dict(state_dict)
-                except FileNotFoundError:
-                    print('not found: {} not found, skip {}'.format(load_path, name))
-                except RuntimeError:
-                    print('Size mismatch for {}, skip {}'.format(name, name))
+                print('loading the model from %s' % load_path)
+                # if you are using PyTorch newer than 0.4 (e.g., built from
+                # GitHub source), you can remove str() on self.device
+                state_dict = torch.load(load_path, map_location=self.device)
+                if hasattr(state_dict, '_metadata'):
+                    del state_dict._metadata
+                net.load_state_dict(state_dict)
+                
 
     def print_networks(self, verbose):
         """Print the total number of parameters in the network and (if verbose) network architecture

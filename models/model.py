@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from torch.nn import init
 from torchvision.models import vgg16
 from torch import autograd
+import wandb
 
 
 class Encoder(nn.Module):
@@ -225,6 +226,7 @@ class SlotAttention(nn.Module):
             sigma_bg = self.slots_logsigma_bg.exp().expand(B, 1, -1)
             slot_bg = mu_bg + sigma_bg * torch.randn_like(mu_bg)
         elif self.init_method == 'embedding':
+            wandb.log({'sigma': s})
             mu = self.slots_init.weight.expand(B, -1, -1)
             # slots_init = mu
             z = torch.randn_like(mu).type_as(mu)
