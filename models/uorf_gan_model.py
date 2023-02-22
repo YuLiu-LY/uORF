@@ -10,7 +10,7 @@ import time
 from .projection import Projection
 from torchvision.transforms import Normalize
 from .model import Encoder, Decoder, SlotAttention, Discriminator, get_perceptual_net, raw2outputs, toggle_grad, d_logistic_loss, d_r1_loss, g_nonsaturating_loss
-import math
+
 
 class uorfGanModel(BaseModel):
 
@@ -122,7 +122,6 @@ class uorfGanModel(BaseModel):
             load_suffix = 'iter_{}'.format(opt.load_iter) if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
-        self.sigma_step = opt.sigma_step
 
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
@@ -135,7 +134,7 @@ class uorfGanModel(BaseModel):
         if not self.opt.fixed_locality:
             self.cam2world_azi = input['azi_rot'].to(self.device)
 
-    def forward(self, epoch=0, step=0):
+    def forward(self, epoch=0):
         """Run forward pass. This will be called by both functions <optimize_parameters> and <test>."""
         self.weight_percept = self.opt.weight_percept if epoch >= self.opt.percept_in else 0
         self.weight_gan = self.opt.weight_gan if epoch >= self.opt.gan_train_epoch + self.opt.gan_in else 0
@@ -150,8 +149,7 @@ class uorfGanModel(BaseModel):
         feat = feature_map.flatten(start_dim=2).permute([0, 2, 1])  # BxNxC
 
         # Slot Attention
-        s = self.cosine_anneal(step, self.sigma_step, 0, 1, 0)
-        z_slots, attn = self.netSlotAttention(feat, s=s)  # 1xKxC, 1xKxN
+        z_slots, attn = self.netSlotAttention(feat)  # 1xKxC, 1xKxN
         z_slots, attn = z_slots.squeeze(0), attn.squeeze(0)  # KxC, KxN
         K = attn.shape[0]
 
@@ -242,7 +240,7 @@ class uorfGanModel(BaseModel):
         self.loss_perc = self.loss_perc / self.weight_percept if self.weight_percept > 0 else self.loss_perc
         self.loss_gan = self.loss_gan / self.weight_gan if self.weight_gan > 0 else self.loss_gan
 
-    def forward_disc(self, it=0, step=0):
+    def forward_disc(self, it=0):
         dev = self.x[0:1].device
         nss2cam0 = self.cam2world[0:1].inverse() if self.opt.fixed_locality else self.cam2world_azi[0:1].inverse()
 
@@ -251,8 +249,7 @@ class uorfGanModel(BaseModel):
         feat = feature_map.flatten(start_dim=2).permute([0, 2, 1])  # BxNxC
 
         # Slot Attention
-        s = self.cosine_anneal(step, self.sigma_step, 0, 1, 0)
-        z_slots, attn = self.netSlotAttention(feat, s=s)  # 1xKxC, 1xKxN
+        z_slots, attn = self.netSlotAttention(feat)  # 1xKxC, 1xKxN
         z_slots, attn = z_slots.squeeze(0), attn.squeeze(0)  # KxC, KxN
         K = attn.shape[0]
 
@@ -316,9 +313,9 @@ class uorfGanModel(BaseModel):
         self.loss_d_real = d_loss_real
         self.loss_d_fake = d_loss_fake
 
-    def optimize_parameters(self, ret_grad=False, epoch=0, step=0):
+    def optimize_parameters(self, ret_grad=False, epoch=0):
         """Update network weights; it will be called in every training iteration."""
-        self.forward(epoch, step)
+        self.forward(epoch)
         for opm in self.optimizers:
             opm.zero_grad()
         self.backward()
@@ -374,21 +371,6 @@ class uorfGanModel(BaseModel):
                 state_dict = torch.load(load_path, map_location=str(self.device))
                 sch.load_state_dict(state_dict)
 
-    def cosine_anneal(self, step, final_step, start_step=0, start_value=1.0, final_value=0.1):
-    
-        assert start_value >= final_value
-        assert start_step <= final_step
-        
-        if step < start_step:
-            value = start_value
-        elif step >= final_step:
-            value = final_value
-        else:
-            a = 0.5 * (start_value - final_value)
-            b = 0.5 * (start_value + final_value)
-            progress = (step - start_step) / (final_step - start_step)
-            value = a * math.cos(math.pi * progress) + b
-        return value
 
 if __name__ == '__main__':
     pass

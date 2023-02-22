@@ -209,7 +209,7 @@ class SlotAttention(nn.Module):
         self.norm_feat = nn.LayerNorm(in_dim)
         self.slot_dim = slot_dim
 
-    def forward(self, feat, num_slots=None, s=0):
+    def forward(self, feat, num_slots=None):
         """
         input:
             feat: visual feature with position information, BxNxC
@@ -226,11 +226,7 @@ class SlotAttention(nn.Module):
             sigma_bg = self.slots_logsigma_bg.exp().expand(B, 1, -1)
             slot_bg = mu_bg + sigma_bg * torch.randn_like(mu_bg)
         elif self.init_method == 'embedding':
-            wandb.log({'sigma': s})
-            mu = self.slots_init.weight.expand(B, -1, -1)
-            # slots_init = mu
-            z = torch.randn_like(mu).type_as(mu)
-            slots_init = mu + z * s * mu.detach()
+            slots_init = self.slots_init.weight.expand(B, -1, -1)
             slot_bg = slots_init[:, 0:1, :]
             slot_fg = slots_init[:, 1:, :]
 

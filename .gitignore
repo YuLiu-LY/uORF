@@ -10,3 +10,5 @@ latest-run
 *.wandb
 *.json
 *.yaml
+*.mp4
+*.gif
