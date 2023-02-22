@@ -30,6 +30,5 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--lr_decay_iters', type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
         parser.add_argument('--group', type=str, default='clevr', help='group name')
         parser.add_argument('--project', type=str, default='clevr', help='project name')
-        parser.add_argument('--sigma_step', type=int, default=0, help='the step to decrease sigma from 1 to 0')
         self.isTrain = True
         return parser

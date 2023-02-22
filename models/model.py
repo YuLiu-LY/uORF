@@ -163,14 +163,15 @@ class Decoder(nn.Module):
 
 
 class SlotAttention(nn.Module):
-    def __init__(self, num_slots, in_dim=64, slot_dim=64, iters=3, eps=1e-8, hidden_dim=128, init_method='shared_gaussian'):
+    def __init__(self, num_slots, in_dim=64, slot_dim=64, iters=3, eps=1e-8, hidden_dim=128, 
+                 init_method='shared_gaussian', bilevel_optimize=False):
         super().__init__()
         self.num_slots = num_slots
         self.iters = iters
         self.eps = eps
         self.scale = slot_dim ** -0.5
         self.init_method = init_method
-    
+        self.bilevel_optimize = bilevel_optimize
 
         if init_method == 'shared_gaussian':
             self.slots_mu = nn.Parameter(torch.randn(1, 1, slot_dim))
@@ -236,7 +237,7 @@ class SlotAttention(nn.Module):
 
         attn = None
         for i in range(self.iters):
-            if i == self.iters - 1:
+            if i == self.iters - 1 and self.bilevel_optimize:
                 slot_bg = (slot_bg - slots_init[:, 0:1, :]).detach() + slots_init[:, 0:1, :]
                 slot_fg = (slot_fg - slots_init[:, 1:, :]).detach() + slots_init[:, 1:, :]
             slot_prev_bg = slot_bg

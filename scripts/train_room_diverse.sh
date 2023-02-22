@@ -9,5 +9,5 @@ python train_with_gan.py --dataroot $DATAROOT --n_scenes 5000 --n_img_each_scene
     --model 'uorf_gan' --bottom \
     --gpu_ids '0' \
     --init_method 'embedding' \
-    --sigma_step 0 \
+    --bilevel_optimize \
     --project 'uorf-diverse' \

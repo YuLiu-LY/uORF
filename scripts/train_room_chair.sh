@@ -9,7 +9,5 @@ python train_without_gan.py --dataroot $DATAROOT --n_scenes 1000 --n_img_each_sc
     --model 'uorf_nogan' \
     --gpu_ids '0' \
     --init_method 'embedding' \
-    --sigma_step 0 \
+    --bilevel_optimize \
     --project 'uorf-chair' \
-# done
-echo "Done"

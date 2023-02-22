@@ -53,6 +53,7 @@ class BaseOptions():
                             help='visdom display environment name (default is "main")')
         parser.add_argument('--display_port', type=int, default=8097, help='visdom port of the web display')
         parser.add_argument('--init_method', type=str, default='shared_gaussian', help='shared_gaussian | embedding')
+        parser.add_argument('--bilevel_optimize', type=bool, default=False, action='store_true', help='Use bilevel optimization')
 
         self.initialized = True
         return parser

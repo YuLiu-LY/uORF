@@ -1,14 +1,16 @@
 # uORF with BO-QSA
 This repo is forked from [uORF](https://github.com/KovenYu/uORF) and modified by [Yu Liu](https://yuliu-ly.github.io). We adapt [BO-QSA](https://github.com/YuLiu-LY/BO-QSA) to uORF to further investigate the effectiveness and generality of BO-QSA.
+
 uORF: [ICLR22] [Unsupervised Discovery of Object Radiance Fields](https://arxiv.org/abs/2107.07905) by [Hong-Xing Yu](https://kovenyu.com), [Leonidas J. Guibas](https://geometry.stanford.edu/member/guibas/), [Jiajun Wu](https://jiajunwu.com/) 
+
 BO-QSA: [ICLR2023] [Improving Object-centric Learning With Query Optimization](http://arxiv.org/abs/2210.08990) by [Baoxiong Jia](https://buzz-beater.github.io/)\*, [YuLiu](https://yuliu-ly.github.io)\*, [Siyuan Huang](https://siyuanhuang.com/)
 
 ![teaser](teaser.gif)
 
 Project website: [uORF](https://kovenyu.com/uorf), [BO-QSA](https://bo-qsa.github.io)
 
-# Main modifications
-- change the `model.py, uorf_gan_model, uorf_nogan_model` in `models` and `*.sh` in `scripts` folder to adapt BO-QSA to uORF. We only modify the initialization and optimization method of the Slot-Attention module in uORF, leaving all other hyperparameters unchanged.
+## Main modifications
+- change the `model.py, uorf_gan_model, uorf_nogan_model` in `models` and `*.sh` in `scripts` to adapt BO-QSA to uORF. We only modify the initialization and optimization method of the Slot-Attention module in uORF, leaving all other hyperparameters unchanged.
 - add `vis.py`, `vis_utils.py` in `utils`, `uorf_vis_model.py` in `models`, and `vis_*.sh` in `scripts` to visualize the results of uORF and BO-QSA.
 - add `generate_video.ipynb` to generate video and gif of the results.
 
