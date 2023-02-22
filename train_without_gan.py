@@ -39,7 +39,7 @@ if __name__ == '__main__':
             total_iters += opt.batch_size
             epoch_iter += opt.batch_size
             model.set_input(data)         # unpack data from dataset and apply preprocessing
-            layers, avg_grad = model.optimize_parameters(opt.display_grad, epoch, total_iters)   # calculate loss functions, get gradients, update network weights
+            layers, avg_grad = model.optimize_parameters(opt.display_grad, epoch)   # calculate loss functions, get gradients, update network weights
             if opt.custom_lr and opt.stage == 'coarse':
                 model.update_learning_rate()    # update learning rates at the beginning of every step
 
@@ -60,7 +60,7 @@ if __name__ == '__main__':
                 if opt.display_id > 0:
                     visualizer.plot_current_losses(epoch, float(epoch_iter) / dataset_size, losses)
                 print('learning rate:', model.optimizers[0].param_groups[0]['lr'])
-                
+
                 out_log['epoch'] = epoch
                 for k, v in losses.items():
                     out_log[k] = v
@@ -78,7 +78,3 @@ if __name__ == '__main__':
         if not opt.custom_lr:
             model.update_learning_rate()  # update learning rates at the end of every epoch.
 
-
-
-# salloc -N 1 -t 30:00 --gres=gpu:1 --qos=debug --cpus-per-task=32 --job-name=debug --partition=gpu
-# salloc -N 1 -t 24:00:00 --gres=gpu:1 --qos=gpu --cpus-per-task=32 --partition=gpu

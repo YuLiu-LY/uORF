@@ -7,7 +7,7 @@ python train_with_gan.py --dataroot $DATAROOT --n_scenes 5000 --n_img_each_scene
     --display_port $PORT --display_ncols 4 --print_freq 200 --display_freq 200 --display_grad \
     --load_size 128 --n_samp 64 --input_size 128 --supervision_size 64 --z_dim 64 --num_slots 5 \
     --model 'uorf_gan' --bottom \
-    --gpu_ids '0' \
+    --gpu_ids '4' \
     --init_method 'embedding' \
     --bilevel_optimize \
     --project 'uorf-diverse' \
