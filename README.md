@@ -5,7 +5,7 @@ uORF: [ICLR22] [Unsupervised Discovery of Object Radiance Fields](https://arxiv.
 
 BO-QSA: [ICLR2023] [Improving Object-centric Learning With Query Optimization](http://arxiv.org/abs/2210.08990) by [Baoxiong Jia](https://buzz-beater.github.io/)\*, [YuLiu](https://yuliu-ly.github.io)\*, [Siyuan Huang](https://siyuanhuang.com/)
 
-![teaser](teaser.gif)
+![diverse](diverse.gif)
 
 Project website: [uORF](https://kovenyu.com/uorf), [BO-QSA](https://bo-qsa.github.io)
 
@@ -13,6 +13,8 @@ Project website: [uORF](https://kovenyu.com/uorf), [BO-QSA](https://bo-qsa.githu
 - change the `model.py, uorf_gan_model, uorf_nogan_model` in `models` and `*.sh` in `scripts` to adapt BO-QSA to uORF. We only modify the initialization and optimization method of the Slot-Attention module in uORF, leaving all other hyperparameters unchanged.
 - add `vis.py`, `vis_utils.py` in `utils`, `uorf_vis_model.py` in `models`, and `vis_*.sh` in `scripts` to visualize the results of uORF and BO-QSA.
 - add `generate_video.ipynb` to generate video and gif of the results.
+(For visulization, we sample 128 views of a scene and render them with the learned uORF. Because a RTX 3090 can only render 8-14 views at a time, we render 8 views at a time and sample 16 times for each scene.)
+
 
 ## Environment
 We recommend using Conda:
